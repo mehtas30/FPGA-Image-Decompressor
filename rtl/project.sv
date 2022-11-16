@@ -79,7 +79,12 @@ logic UART_SRAM_we_n;
 logic [25:0] UART_timer;
 
 logic [6:0] value_7_segment [7:0];
-
+//m1
+logic m1start;//0 off 1 start
+logic m1end;
+logic [17:0] M1SramAddy;
+logic [15:0] M1SramWrite;
+logic m1wen;
 // For error detection in UART
 logic Frame_error;
 
@@ -94,6 +99,19 @@ PB_controller PB_unit (
 	.Resetn(resetn),
 	.PB_signal(PUSH_BUTTON_N_I),	
 	.PB_pushed(PB_pushed)
+);
+
+milestone milestone1(
+//inputs
+ 	.Clock(CLOCK_50_I),
+	.Resetn(resetn),
+	.SRAM_read_data(SRAM_read_data),
+	.m1start(m1start),
+//outputs
+	.SRAM_address(M1SramAddy),
+	.SRAM_write_data(M1SramWrite),
+	.SRAM_we_n(m1wen),
+	.m1end(m1end)
 );
 
 VGA_SRAM_interface VGA_unit (
@@ -164,6 +182,7 @@ always @(posedge CLOCK_50_I or negedge resetn) begin
 		UART_timer <= 26'd0;
 		
 		VGA_enable <= 1'b1;
+		m1start<=1'b0;
 	end else begin
 
 		// By default the UART timer (used for timeout detection) is incremented
@@ -198,11 +217,20 @@ always @(posedge CLOCK_50_I or negedge resetn) begin
 
 			// Timeout for 1 sec on UART (detect if file transmission is finished)
 			if (UART_timer == 26'd49999999) begin
-				top_state <= S_IDLE;
+				top_state <= Milestone1;
 				UART_timer <= 26'd0;
 			end
 		end
-
+		//milestone 1 state
+		Milestone1: begin
+			m1start=1'b1;
+			if (m1end==1'b1) begin
+				m1start=1'b0;
+				top_state<=S_IDLE;
+			end
+		end
+		
+		
 		default: top_state <= S_IDLE;
 
 		endcase
@@ -214,12 +242,25 @@ end
 // to match the starting address of the raw RGB data segment
 assign VGA_base_address = 18'd0;
 
-// Give access to SRAM for UART and VGA at appropriate time
-assign SRAM_address = (top_state == S_UART_RX) ? UART_SRAM_address : VGA_SRAM_address;
+// Give access to SRAM for UART and VGA and milestone at appropriate time
+if (top_state == S_UART_RX) begin
+	assign SRAM_address=UART_SRAM_address;
+	assign SRAM_write_data =SRAM_write_data;
+	assign SRAM_we_n=UART_SRAM_we_n;
+end else if (top_state == Milestone1) begin
+	assign SRAM_address=M1sramaddy;
+	assign SRAM_write_data=M1SramWrite;
+	assign SRAM_we_n=m1wen;
+end else begin
+	assign SRAM_address=VGA_SRAM_address;
+	assign SRAM_write_data =16'd0;
+	assign SRAM_we_n=1'b1;
+end
+//assign SRAM_address = (top_state == S_UART_RX) ? UART_SRAM_address : VGA_SRAM_address;
 
-assign SRAM_write_data = (top_state == S_UART_RX) ? UART_SRAM_write_data : 16'd0;
+//assign SRAM_write_data = (top_state == S_UART_RX) ? UART_SRAM_write_data : 16'd0;
 
-assign SRAM_we_n = (top_state == S_UART_RX) ? UART_SRAM_we_n : 1'b1;
+//assign SRAM_we_n = (top_state == S_UART_RX) ? UART_SRAM_we_n : 1'b1;
 
 // 7 segment displays
 convert_hex_to_seven_segment unit7 (

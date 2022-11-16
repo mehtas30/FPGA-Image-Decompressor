@@ -3,7 +3,8 @@
 // for top state - we have more states than needed
 typedef enum logic [1:0] {
 	S_IDLE,
-	S_UART_RX
+	S_UART_RX,
+	Milestone1
 } top_state_type;
 
 typedef enum logic [1:0] {
@@ -35,6 +36,70 @@ typedef enum logic [3:0] {
 	S_VS_FETCH_PIXEL_DATA_2,
 	S_VS_FETCH_PIXEL_DATA_3
 } VGA_SRAM_state_type;
+
+typedef enum logic [3:0] {
+	S_IDLE,
+	li0, 
+	li1,
+	li2,
+	li3,
+	li4,
+	li5,
+	li6,
+	li7,
+	li8,
+	li9,
+	li10,
+	li11,
+	li12,
+	cc0,
+	cc1,
+	cc2,
+	cc3,
+	cc4,
+	cc5,
+	cc6,
+	cc7,
+	cc8,
+	cc9,
+	cc10,
+	cc11,
+	cc12,
+	cc13,
+	cc14,
+	lo0,
+	lo1,
+	lo2,
+	lo3,
+	lo4,
+	lo5,
+	lo6,
+	lo7,
+	lo8,
+	lo9,
+	lo10,
+	lo11,
+	lo12,
+	lo13,
+	lo14,
+	lo15,
+	lo16,
+	lo17,
+	lo18,
+	lo19,
+	lo20,
+	lo21,
+	lo22,
+	lo23,
+	lo24,
+	lo25,
+	lo26,
+	lo27,
+	lo28,
+	lo29,
+	lo30
+} milestone1_state_type;
+
 
 parameter 
    VIEW_AREA_LEFT = 160,
