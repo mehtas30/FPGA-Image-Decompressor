@@ -2,7 +2,7 @@
 
 module milestone(
 	input logic Clock,
-	input logic Resetn,
+	input logic resetn,
 	input logic [15:0] SRAM_read_data,
 	input logic m1start,
 //outputs
@@ -25,7 +25,7 @@ logic[7:0] ubuffereven;
 logic[7:0] vpeven;
 logic[7:0] vpodd;
 logic[7:0] vpbufferodd;
-logic[7:0] vpbuffereven;
+logic[7:0] vbuffereven;
 
 logic [7:0] un5;
 logic [7:0] un3;
@@ -58,12 +58,12 @@ logic [17:0] ucounter;
 logic [17:0] vcounter;
 logic [17:0] ycounter;
 //coeffs
-parameter signed jnfive= 18'd21;
-parameter signed jnthree= -18'd52;
-parameter signed jnone= 18'd159;
-parameter signed jpone= 18'd159;
-parameter signed jpthree= -18'd52;
-parameter signed jpfive= 18'd21;
+parameter signed jn5= 18'd21;
+parameter signed jn3= -18'd52;
+parameter signed jn1= 18'd159;
+parameter signed jp1= 18'd159;
+parameter signed jp3= -18'd52;
+parameter signed jp5= 18'd21;
 
 parameter signed a00=18'd76284;
 parameter signed a02=18'd104595;
@@ -96,7 +96,7 @@ always @(posedge Clock or negedge resetn) begin
 		vpeven<=8'd0;
 		vpodd<=8'd0;
 		vpbufferodd<=8'd0;
-		vpbuffereven<=8'd0;
+		vbuffereven<=8'd0;
 
 		un5<=8'd0;
 		un3<=8'd0;
@@ -119,7 +119,7 @@ always @(posedge Clock or negedge resetn) begin
 		G<=32'd0;
 		B<=32'd0;
 
-		evenodd<1'b0;//0 is even
+		evenodd<=1'b0;//0 is even
 
 		op1<=32'd0;
 		op2<=32'd0;
@@ -127,12 +127,13 @@ always @(posedge Clock or negedge resetn) begin
 		op4<=32'd0;
 		op5<=32'd0;
 		op6<=32'd0;
-		m1state<=S_IDLE;
+		m1state<=M1S_IDLE;
 	end else begin
 		case(m1state)
-			S_IDLE:begin
+			M1S_IDLE:begin
+					if (m1start==1'b1) begin
 					SRAM_address <= uaddy;//uou1
-					ucounter<= 18'd1;
+					ucounter<= 18'd0;
 					m1state <= li0;
 					SRAM_write_data<=18'd0;
 					SRAM_we_n<=1'b1;
@@ -148,7 +149,7 @@ always @(posedge Clock or negedge resetn) begin
 					vpeven<=8'd0;
 					vpodd<=8'd0;
 					vpbufferodd<=8'd0;
-					vpbuffereven<=8'd0;
+					vbuffereven<=8'd0;
 					
 					un5<=8'd0;
 					un3<=8'd0;
@@ -171,7 +172,7 @@ always @(posedge Clock or negedge resetn) begin
 					G<=32'd0;
 					B<=32'd0;
 					
-					evenodd<1'b0;//0 is even
+					evenodd<=1'b0;//0 is even
 					
 					op1<=32'd0;
 					op2<=32'd0;
@@ -180,20 +181,22 @@ always @(posedge Clock or negedge resetn) begin
 					op5<=32'd0;
 					op6<=32'd0;
 					m1state <= li0;
+					end
 			end
 			li0:begin
 				SRAM_address <= vaddy; //v0v1
 				vcounter <= vcounter + 18'd1;
+				ucounter<= ucounter + 18'd1;
 				m1state <= li1;
 			end
 			li1:begin 
 				SRAM_address <= uaddy + ucounter; //u2u3
-				ucounter<= ucounter + 18'd1;
 				m1state <= li2;
 			end 
 			li2:begin
 				SRAM_address <= vaddy + vcounter; //v2v3
 				vcounter <= vcounter + 18'd1;
+				ucounter<= ucounter + 18'd1;
 				//reading u0u1
 				un5<=SRAM_read_data[7:0];
 				un3<=SRAM_read_data[7:0];
@@ -254,7 +257,6 @@ always @(posedge Clock or negedge resetn) begin
 			li6:begin
 				upodd <= upodd + mult1;//j5+j3+j1+j1
 				vpodd <= vpodd + mult2;//j5+j3+j1
-				SRAM_read_data[15:8];
 				ybuff[0]<=SRAM_read_data[7:0];
 				ybuff[1]<=SRAM_read_data[15:8];
 				op1<=up3;//u2
@@ -313,10 +315,11 @@ always @(posedge Clock or negedge resetn) begin
 				G<=G+mult3;
 				op1 <= a12; 
 				op6<=	vbuffereven;
+				m1end<=1'b1;
 			end
 
 			
 		endcase
 end
-
+end
 endmodule

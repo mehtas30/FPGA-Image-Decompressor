@@ -104,7 +104,7 @@ PB_controller PB_unit (
 milestone milestone1(
 //inputs
  	.Clock(CLOCK_50_I),
-	.Resetn(resetn),
+	.resetn(resetn),
 	.SRAM_read_data(SRAM_read_data),
 	.m1start(m1start),
 //outputs
@@ -240,21 +240,23 @@ end
 // for this design we assume that the RGB data starts at location 0 in the external SRAM
 // if the memory layout is different, this value should be adjusted 
 // to match the starting address of the raw RGB data segment
-assign VGA_base_address = 18'd0;
+assign VGA_base_address = 18'd146944;
 
 // Give access to SRAM for UART and VGA and milestone at appropriate time
+always_comb begin
 if (top_state == S_UART_RX) begin
 	assign SRAM_address=UART_SRAM_address;
 	assign SRAM_write_data =SRAM_write_data;
 	assign SRAM_we_n=UART_SRAM_we_n;
 end else if (top_state == Milestone1) begin
-	assign SRAM_address=M1sramaddy;
+	assign SRAM_address=M1SramAddy;
 	assign SRAM_write_data=M1SramWrite;
 	assign SRAM_we_n=m1wen;
 end else begin
 	assign SRAM_address=VGA_SRAM_address;
 	assign SRAM_write_data =16'd0;
 	assign SRAM_we_n=1'b1;
+end
 end
 //assign SRAM_address = (top_state == S_UART_RX) ? UART_SRAM_address : VGA_SRAM_address;
 
