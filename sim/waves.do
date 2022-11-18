@@ -50,10 +50,3 @@ add wave -hex UUT/milestone1/vn1
 add wave -hex UUT/milestone1/vp1
 add wave -hex UUT/milestone1/vp3
 add wave -hex UUT/milestone1/vp5
-
-add wave -hex UUT/milestone1/yn5
-add wave -hex UUT/milestone1/yn3
-add wave -hex UUT/milestone1/yn1
-add wave -hex UUT/milestone1/yp1
-add wave -hex UUT/milestone1/yp3
-add wave -hex UUT/milestone1/yp5

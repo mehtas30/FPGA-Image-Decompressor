@@ -57,6 +57,7 @@ logic [63:0] multlong1, multlong2, multlong3;
 logic [17:0] ucounter;
 logic [17:0] vcounter;
 logic [17:0] ycounter;
+logic [17:0] rgbcounter;
 //coeffs
 parameter signed jn5= 18'd21;
 parameter signed jn3= -18'd52;
@@ -127,6 +128,7 @@ always @(posedge Clock or negedge resetn) begin
 		op4<=32'd0;
 		op5<=32'd0;
 		op6<=32'd0;
+		rgbcounter<=18'd0;
 		m1state<=M1S_IDLE;
 	end else begin
 		case(m1state)
@@ -180,6 +182,7 @@ always @(posedge Clock or negedge resetn) begin
 					op4<=32'd0;
 					op5<=32'd0;
 					op6<=32'd0;
+					rgbcounter<=18'd0;
 					m1state <= li0;
 					end
 			end
@@ -301,6 +304,7 @@ always @(posedge Clock or negedge resetn) begin
 				B<=B+mult3;
 				op5 <= a11; 
 				op6<=	ubuffereven;
+				SRAM_write_data<= R;
 				m1state <= li11;
 			end
 			li11:begin
@@ -317,7 +321,7 @@ always @(posedge Clock or negedge resetn) begin
 				op6<=	vbuffereven;
 				m1end<=1'b1;
 			end
-
+			
 			
 		endcase
 end
