@@ -42,6 +42,9 @@ logic [7:0] vp3;
 logic [7:0] vp5;
 
 logic [7:0]ybuff[1:0];
+logic [7:0]ubuff[1:0];
+logic [7:0]vbuff[1:0];
+
 
 logic [31:0] R;
 logic [31:0] G;
@@ -115,6 +118,11 @@ always @(posedge Clock or negedge resetn) begin
 
 		ybuff[0]<=8'd0;
 		ybuff[1]<=8'd0;
+		ubuff[0]<=8'd0;
+		ubuff[1]<=8'd0;
+		vbuff[0]<=8'd0;
+		vbuff[1]<=8'd0;
+		
 
 		R<=32'd0;
 		G<=32'd0;
@@ -207,7 +215,7 @@ always @(posedge Clock or negedge resetn) begin
 				up1<=SRAM_read_data[7:0];
 				up3<=SRAM_read_data[7:0];
 				up5<=SRAM_read_data[15:8];
-				upeven <= SRAM_read_data[7:0];//u0
+				upeven <= SRAM_read_data[7:0]- 8'd128;//u0
 				op1<= SRAM_read_data[7:0]; //u0
 				op2 <= jn5;
 				m1state <= li3;
@@ -222,7 +230,7 @@ always @(posedge Clock or negedge resetn) begin
 				vp1<=SRAM_read_data[7:0];
 				vp3<=SRAM_read_data[7:0];
 				vp5<=SRAM_read_data[15:8];
-				vpeven <= SRAM_read_data[7:0];//v0
+				vpeven <= SRAM_read_data[7:0] - 8'd128;//v0
 				upodd <= upodd+mult1; //jn5
 				op1<= un3; //u0
 				op2 <= jn3;
@@ -260,8 +268,8 @@ always @(posedge Clock or negedge resetn) begin
 			li6:begin
 				upodd <= upodd + mult1;//j5+j3+j1+j1
 				vpodd <= vpodd + mult2;//j5+j3+j1
-				ybuff[0]<=SRAM_read_data[7:0];
-				ybuff[1]<=SRAM_read_data[15:8];
+				ybuff[0]<=SRAM_read_data[7:0] - 8'd16;
+				ybuff[1]<=SRAM_read_data[15:8] - 8'd16;
 				op1<=up3;//u2
 				op2<=jp3;
 				op3<=vp1;//v1
@@ -280,7 +288,7 @@ always @(posedge Clock or negedge resetn) begin
 				m1state <= li8;
 			end
 			li8:begin
-				upodd <= (upodd + mult1 + 18'd128)>>>8;//j5+j3+j1+j1+j3+j5
+				upodd <= ((upodd + mult1 + 18'd128)>>>8) - 8'd128;//j5+j3+j1+j1+j3+j5
 				vpodd <= vpodd + mult2;//j5+j3+j1+j1+j3
 				op3<=vp5;//v5
 				op4<=jp5;
@@ -292,7 +300,8 @@ always @(posedge Clock or negedge resetn) begin
 				m1state <= li9;
 			end
 			li9:begin
-				vpodd <= (vpodd + mult2 + 18'd128) >>> 8;//j5+j3+j1+j1+j3+j5
+				vpodd <= ((vpodd + mult2 + 18'd128)>>>8) - 8'd128;//j5+j3+j1+j1+j3+j5
+				ubufferodd <= upodd;
 				R<=R+mult3;//A02
 				op5 <= a21; 
 				op6<=	ubuffereven;
@@ -319,10 +328,250 @@ always @(posedge Clock or negedge resetn) begin
 				G<=G+mult3;
 				op1 <= a12; 
 				op6<=	vbuffereven;
+				evenodd <= 1'b1;
 				m1end<=1'b1;
+				op5 <= a00;
+				op6 <= ybuff[1];
+					
+			end
+			cc1:begin
+				if(evenodd <= 1'b1):
+					//SRAM_write_data<= B;
+					up5 <= SRAM_read_data[7:0];
+					ubuff[0] <= SRAM_read_data[15:8];
+					vpbufferodd <= vpodd;
+					R <= mult3;
+					G <= mult3;
+					B <= mult3;
+					op1 <= un5;
+					op2 <= jn5;
+					op5 <= a02;
+					op6 <= ubufferodd;
+					m1state <= cc2;
+				end else:
+					R<= mult3;
+					G <= mult3;
+					B <= mult3;
+					op5 <= a02;
+					op6 <= ubuffereven;
+				end
+			end
+			
+			cc2:begin
+				if(evenodd <= 1'b1):
+					SRAM_write_data<= G;
+					vp5 <= SRAM_read_data[7:0];
+					vbuff[0] <= SRAM_read_data[15:8];
+					upeven <= un1;
+					upodd <= upodd + mult1;
+					op1 <= jn3;
+					op2 <= un3;
+					
+					R<=R+mult3;
+					op5 <= a21;
+					m1state <= cc3;
+				end else:
+					R<= mult3;
+					op5 <= a21;
+				end
 			end
 			
 			
+			cc3:begin
+				if(evenodd <= 1'b1):
+					B<= B+mult3;
+					op5 <= a11;
+					upodd <= mult1 + upodd;
+					op1 <= jn1;
+					op2 <= un1;
+				end else:
+					B<= B + mult3;
+					op5 <= a11;
+				end
+			end
+			
+			cc4:begin
+				if(evenodd <= 1'b1):
+					G<=G+mult3;
+					upodd <= mult1 + upodd;
+					op1 <= jp1;
+					op2 <= up1;
+					op5 <= a12;
+					op6 <= vbufferodd;
+				end else:
+					G<= G + mult3;
+					op5 <= a12;
+					op6 <= vbuffereven;
+				end			
+			
+			end
+			
+			
+			cc5:begin
+				if(evenodd <= 1'b1):
+					G <= G+mult3;
+					
+					upodd <= mult1 + upodd;
+					op1 <= jp3;
+					op2 <= up3;
+					
+					
+					op5 <= a00;
+					op6 <= ybuff[0];
+				end else:
+					G <= mult3 + G;
+					op5<= a00;
+					op6<= ybuff[1];
+				end			
+			
+			end
+			
+			cc6:begin
+				if(evenodd <= 1'b1):
+					R <= mult3;
+					G <= mult3;
+					B <= mult3;
+					
+					upodd <= mult1 + upodd;
+					op1 <= jp5;
+					op2 <= up5;
+					
+					
+					op5 <= a02;
+					op6 <= ubuffereven;
+				end else:
+					R <= mult3;
+					G <= mult3;
+					B <= mult3;
+					op5 <= a02;
+					op6 <= ubufferodd;
+				end			
+			end
+			
+			cc7:begin
+				if(evenodd <= 1'b1):
+					R<= mult3 + R;
+					
+					upodd <= ((upodd + mult1 + 18'd128)>>>8) - 8'd128;
+					
+					op5 <= a21;
+				end else:
+					R<= mult3 + R;
+					op5 <= a21;
+					
+				end			
+			end
+			cc8:begin
+				if(evenodd <= 1'b1):
+					B <= mult3 + B
+					op1<= un5;
+					op2<= jn5;
+					
+					op5 <= a11;
+				end else:
+					B<= mult3 + B
+					op5 <= a11;
+				end			
+			end
+			cc9:begin
+				if(evenodd <= 1'b1):
+					upeven = un1;
+					upodd = mult1;
+					G<= mult3 + G;
+					op5 <= a12;
+					op6 <= vbuffereven;
+					op1 <= un3;
+					op2 <= jn3;
+				end else:
+					G <+ mult3 + G;
+					op5 <= a12;
+					op6 <= vbufferodd;
+				end			
+			end
+			cc10:begin
+				if(evenodd <= 1'b1):
+					upodd = upodd + mult1;
+					op1 <= un1;
+					op2 <= jn1;
+					
+					G <= mult3 + G;
+					op5 <= a00;
+					op6<= ybuff[1];
+				end else:
+					G <= mult3 + G;
+					op5 <= a00;
+					op6 <= ybuff[0];
+				end			
+			end
+			cc11:begin
+				if(evenodd <= 1'b1):
+					upodd = upodd + mult1;
+					op1 <= up1;
+					op2 <= jp1;
+					R<= mult3;
+					G<= mult3;
+					B <= mult3;
+					op5 <= a02;
+					op6 <= ubufferodd;
+					
+				end else:
+					R<= mult3;
+					G<= mult3;
+					B <= mult3;
+					op5 <= a02;
+					op6 <= ubuffereven;					
+				end			
+			end
+			cc12:begin
+				if(evenodd <= 1'b1):
+					upodd = upodd + mult1;
+					op1 <= up3;
+					op2 <= jp3;
+					R <= R + mult3;
+					op5 <= a21;
+					
+				end else:
+					R <= R + mult3;
+					op5 <= a21;
+				end			
+			end	
+			cc13:begin
+				if(evenodd <= 1'b1):
+					upodd = upodd + mult1;
+					op1 <= up5;
+					op2 <= jp5;
+					B<= B + mult3;
+					op5 <= a11;
+				end else:
+					B <= B + mult3;
+					op5 <= a11;
+				end			
+			end
+			cc14:begin
+				if(evenodd <= 1'b1):
+					upodd = upodd + mult1;
+					G <= G + mult3;
+					op5 <= a12;
+					op6 <= vbufferodd;
+				end else:
+					G <= G + mult3;
+					op5 <= a12;
+					op6 <= vbufereven;
+				end
+			end	
+			cc15:begin
+				if(evenodd <= 1'b1):
+					op1 = un3;
+					op2 = jp5;
+					G <= G + mult3;
+					op5 <= a00;
+					op6 <= ybuff[0];
+				end else:
+					G <= G + mult3;
+					op5 <= a00;
+					op6 <= ybuff[1];
+				end
+			end		
 		endcase
 end
 end
