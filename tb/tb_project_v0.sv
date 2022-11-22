@@ -295,8 +295,8 @@ module TB;
 					SRAM_ARRAY[UUT.SRAM_address], SRAM_ARRAY[UUT.SRAM_address]);
 				$write("sim time %t: print some useful debug info here ...\n", $realtime);
 				// assuming your milestone 1 instance is called "m1" and its state is called "state"
-				// $write("m1 state %d\n", UUT.m1.state);
-				$write("... or take a look at the last few clock cycles in the waveforms that lead up to this error\n");
+				//$write("m1 state %d\n", UUT.milestone.state);
+				//$write("... or take a look at the last few clock cycles in the waveforms that lead up to this error\n");
 				number_of_mismatches = number_of_mismatches + 1;
 				if (number_of_mismatches == `MAX_MISMATCHES)
 					$stop;

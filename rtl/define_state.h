@@ -51,7 +51,6 @@ typedef enum logic [6:0] {
 	li9,
 	li10,
 	li11,
-	li12,
 	cc0,
 	cc1,
 	cc2,
