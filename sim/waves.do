@@ -33,22 +33,23 @@ add wave -hex UUT/VGA_unit/VGA_blue
 
 add wave -divider -height 10 {OUR STUFF}
 add wave -hex UUT/milestone1/m1state
+add wave -hex UUT/milestone1/evenodd
 add wave -hex UUT/milestone1/ucounter
 add wave -hex UUT/milestone1/ycounter
 add wave -hex UUT/milestone1/vcounter
 add wave -hex UUT/milestone1/ybuff
 
-add wave -hex UUT/milestone1/un5
-add wave -hex UUT/milestone1/un3
+#add wave -hex UUT/milestone1/un5
+#add wave -hex UUT/milestone1/un3
 add wave -hex UUT/milestone1/un1
-add wave -hex UUT/milestone1/up1
-add wave -hex UUT/milestone1/up3
+#add wave -hex UUT/milestone1/up1
+#add wave -hex UUT/milestone1/up3
 add wave -hex UUT/milestone1/up5
-add wave -hex UUT/milestone1/vn5
-add wave -hex UUT/milestone1/vn3
+#add wave -hex UUT/milestone1/vn5
+#add wave -hex UUT/milestone1/vn3
 add wave -hex UUT/milestone1/vn1
-add wave -hex UUT/milestone1/vp1
-add wave -hex UUT/milestone1/vp3
+#add wave -hex UUT/milestone1/vp1
+#add wave -hex UUT/milestone1/vp3
 add wave -hex UUT/milestone1/vp5
 add wave -hex UUT/milestone1/ubufferodd
 add wave -hex UUT/milestone1/ubuffereven
@@ -58,6 +59,8 @@ add wave -hex UUT/milestone1/vbufferodd
 add wave -hex UUT/milestone1/vbuffereven
 add wave -hex UUT/milestone1/vpodd
 add wave -hex UUT/milestone1/vpeven
+add wave -hex UUT/milestone1/vbuff
+add wave -hex UUT/milestone1/ubuff
 
 add wave -divider -height 10 {RGB GOON SQUAD}
 add wave -hex UUT/milestone1/rgbcounter
@@ -84,3 +87,5 @@ add wave -hex UUT/milestone1/op4
 add wave -hex UUT/milestone1/op5
 add wave -hex UUT/milestone1/op6
 
+add wave -hex UUT/milestone1/a11
+add wave -hex UUT/milestone1/a12
