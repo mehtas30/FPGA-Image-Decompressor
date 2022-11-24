@@ -46,26 +46,25 @@ logic [7:0] vp3;
 logic [7:0] vp5;
 
 logic [31:0]ybuff[1:0];
-logic [31:0]ubuff;
-logic [31:0]vbuff;
+logic [7:0]ubuff;
+logic [7:0]vbuff;
 
 logic [31:0] R;//calcs
 logic [31:0] G;
 logic [31:0] B;
 
-logic [31:0] Rbuff; //hold
-logic [31:0] Gbuff;
-logic [31:0] Bbuff;
+logic [31:0] Rbuff[0:1]; //hold
+logic [31:0] Gbuff[0:1];
+logic [31:0] Bbuff[0:1];
 
-logic [7:0] Rc;//clip
-logic [7:0] Bc;
-logic [7:0] Gc;
+logic [7:0] Rc[1:0];//clip
+logic [7:0] Bc[1:0];
+logic [7:0] Gc[1:0];
+
 //GETOUT 
-logic [7:0] Rout;
-logic [7:0] Bout;
-logic [7:0] Gout;
-
-logic evenodd;
+logic [7:0] Rout[0:1];
+logic [7:0] Bout[0:1];
+logic [7:0] Gout[0:1];
 
 logic signed [31:0] op1,op2,op3,op4,op5,op6;
 logic signed [31:0] mult1,mult2,mult3;
@@ -76,6 +75,8 @@ logic [17:0] ucounter;
 logic [17:0] vcounter;
 logic [17:0] ycounter;
 logic [17:0] rgbcounter;
+
+logic select;
 //coeffs
 parameter signed jn5= 32'h15;
 parameter signed jn3= 32'hFFFFFFCC;
@@ -90,6 +91,7 @@ parameter signed a11=32'hffff9BE8;
 parameter signed a12=32'hffff2fdf;
 parameter signed a21=32'h2049B;
 
+
 assign multlong1=$signed(op1)*$signed(op2);
 assign mult1=multlong1[31:0];
 
@@ -98,10 +100,17 @@ assign mult2=multlong2[31:0];
 
 assign multlong3=$signed(op5)*$signed(op6);
 assign mult3=multlong3[31:0];
-
-assign Rc=(Rbuff[31]==1'b1)?8'd0:((Rbuff[31:24]>=8'd1)?8'd255:Rbuff[23:16]);
-assign Bc=(Bbuff[31]==1'b1)?8'd0:((Bbuff[31:24]>=8'd1)?8'd255:Bbuff[23:16]);
-assign Gc=(Gbuff[31]==1'b1)?8'd0:((Gbuff[31:24]>=8'd1)?8'd255:Gbuff[23:16]);
+always_comb begin
+//if (select==1'b0) begin
+ Rc[0]=(Rbuff[0][31]==1'b1)?8'd0:((Rbuff[0][31:24]>=8'd1)?8'd255:Rbuff[0][23:16]);
+ Bc[0]=(Bbuff[0][31]==1'b1)?8'd0:((Bbuff[0][31:24]>=8'd1)?8'd255:Bbuff[0][23:16]);
+Gc[0]=(Gbuff[0][31]==1'b1)?8'd0:((Gbuff[0][31:24]>=8'd1)?8'd255:Gbuff[0][23:16]);
+//end else begin
+ Rc[1]=(Rbuff[1][31]==1'b1)?8'd0:((Rbuff[1][31:24]>=8'd1)?8'd255:Rbuff[1][23:16]);
+ Bc[1]=(Bbuff[1][31]==1'b1)?8'd0:((Bbuff[1][31:24]>=8'd1)?8'd255:Bbuff[1][23:16]);
+ Gc[1]=(Gbuff[1][31]==1'b1)?8'd0:((Gbuff[1][31:24]>=8'd1)?8'd255:Gbuff[1][23:16]);
+//end
+end
 
 always @(posedge Clock or negedge resetn) begin
 	if(~resetn)begin
@@ -120,7 +129,7 @@ always @(posedge Clock or negedge resetn) begin
 		vpodd<=32'd0;
 		vbufferodd<=32'd0;
 		vbuffereven<=32'd0;
-
+		
 		un5<=8'd0;
 		un3<=8'd0;
 		un1<=8'd0;
@@ -138,24 +147,29 @@ always @(posedge Clock or negedge resetn) begin
 		ybuff[0]<=32'd0;
 		ybuff[1]<=32'd0;
 		
-		ubuff<=32'd0;
+		ubuff<=8'd0;
 
-		vbuff<=32'd0;
+		vbuff<=8'd0;
 		
 
 		R<=32'd0;
 		G<=32'd0;
 		B<=32'd0;
 
-		Rbuff<=32'd0;
-		Gbuff<=32'd0;
-		Bbuff<=32'd0;
-
-		Rout<=8'd0;
-		Bout<=8'd0;
-		Gout<=8'd0;
+		Rbuff[0]<=32'd0;
+		Gbuff[0]<=32'd0;
+		Bbuff[0]<=32'd0;
 		
-		evenodd<=1'b1;//0 is even
+		Rbuff[1]<=32'd0;
+		Gbuff[1]<=32'd0;
+		Bbuff[1]<=32'd0;
+select<=1'b0;
+		Rout[0]<=8'd0;
+		Bout[0]<=8'd0;
+		Gout[0]<=8'd0;
+		Rout[1]<=8'd0;
+		Bout[1]<=8'd0;
+		Gout[1]<=8'd0;
 
 		op1<=32'd0;
 		op2<=32'd0;
@@ -183,6 +197,7 @@ always @(posedge Clock or negedge resetn) begin
 					ycounter<=18'd0;
 					ubufferodd<=32'd0;
 					ubuffereven<=32'd0;
+
 					
 					vpeven<=32'd0;
 					vpodd<=32'd0;
@@ -205,22 +220,29 @@ always @(posedge Clock or negedge resetn) begin
 					
 					ybuff[0]<=32'd0;
 					ybuff[1]<=32'd0;
-					ubuff<=32'd0;
-					vbuff<=32'd0;
+					ubuff<=8'd0;
+					vbuff<=8'd0;
 					
 					R<=32'd0;
 					G<=32'd0;
 					B<=32'd0;
 					
-					Rbuff<=32'd0;
-					Gbuff<=32'd0;
-					Bbuff<=32'd0;
+		Rbuff[0]<=32'd0;
+		Gbuff[0]<=32'd0;
+		Bbuff[0]<=32'd0;
+		
+		Rbuff[1]<=32'd0;
+		Gbuff[1]<=32'd0;
+		Bbuff[1]<=32'd0;
 
-					Rout<=8'd0;
-					Bout<=8'd0;
-					Gout<=8'd0;					
+				select<=1'b0;
+		Rout[0]<=8'd0;
+		Bout[0]<=8'd0;
+		Gout[0]<=8'd0;
+		Rout[1]<=8'd0;
+		Bout[1]<=8'd0;
+		Gout[1]<=8'd0;					
 					
-					evenodd<=1'b1;//0 is even
 					
 					op1<=32'd0;
 					op2<=32'd0;
@@ -348,7 +370,7 @@ always @(posedge Clock or negedge resetn) begin
 				op3<={24'd0,vp5};
 				op4<=jp5;
 				
-				Rbuff<=R+mult3; //aooy0, a02ubuffereven
+				Rbuff[0]<=R+mult3; //aooy0, a02ubuffereven
 				op5 <= a21; 
 				op6<=ubuffereven;
 				m1state <= li9;
@@ -356,7 +378,7 @@ always @(posedge Clock or negedge resetn) begin
 			li9:begin
 				vpodd <= ((vpodd + mult2 + 32'd128)>>>8) - 32'd128; //jn5, jn3, jn1, jp1, jp3, jp5
 				ubufferodd <= upodd;
-				Bbuff<=B+mult3; //aooy0, a21ubuffereven
+				Bbuff[0]<=B+mult3; //aooy0, a21ubuffereven
 				op5 <= a11; 
 				m1state <= li10;
 			end
@@ -365,7 +387,7 @@ always @(posedge Clock or negedge resetn) begin
 				SRAM_address <= uaddy + ucounter; //u4u5
 				ucounter<= ucounter + 18'd1;
 				G<= G + mult3;
-				Rout<=Rc;
+				Rout[0]<=Rc[0];
 				op5 <= a12; 
 				op6<=	vbuffereven;
 				m1state <= li11;
@@ -373,26 +395,24 @@ always @(posedge Clock or negedge resetn) begin
 			li11:begin
 				SRAM_address <= vaddy + vcounter; //v4v5
 				vcounter<= vcounter + 18'd1;
-				Gbuff<=G+mult3;//END OF CALC
-				Bout<=Bc;
-				op5 <= a12; 
+				Gbuff[0]<=G+mult3;//END OF CALC
+				Bout[0]<=Bc[0];
 				//shift u regs
 				un5 <= un3;
 				un3 <= un1;
 				un1 <= up1;
 				up1 <= up3;
 				up3 <= up5;
-				op5 <= a00;
-				op6 <= ybuff[1];
-				evenodd<=1'b1;
 				m1state <= li12;
 			end
 			li12:begin
 					SRAM_address <= yaddy + ycounter;
 					ycounter <= ycounter + 32'd1;
-					m1state <= cc1;
+					op5<=a00;
+					op6<=ybuff[1];
+					m1state <= li13;
 			end
-			cc1:begin
+			li13:begin
 				SRAM_we_n <= 1'b1;
 				R <= mult3;
 				G <= mult3;
@@ -407,20 +427,16 @@ always @(posedge Clock or negedge resetn) begin
 				vp1 <= vp3;
 				vp3 <= vp5;
 				op5 <= a02;
-				Gout<=Gc;//SHOULD HAVE CLIPPED VALUE
+				Gout[0]<=Gc[0];//SHOULD HAVE CLIPPED VALUE
 				vbufferodd <= vpodd;
-				if(evenodd==1'b1) begin
 					op6 <= {24'd0,vbufferodd};
 					up5 <= SRAM_read_data[15:8];
 					ubuff <= {24'd0,SRAM_read_data[7:0]};
-				end else begin
-					op6 <= vbuffereven;
-				end
 				
-				m1state <= cc2;				
+				m1state <= li14;				
 			end
 			
-			cc2:begin
+			li14:begin
 				SRAM_we_n <= 1'b0;
 				SRAM_address <= RGBaddy + rgbcounter;//146944
 				rgbcounter <= rgbcounter + 18'd1;
@@ -434,21 +450,15 @@ always @(posedge Clock or negedge resetn) begin
 				op3 <= jn5;
 				op4 <= {24'd0,vn5};
 				
-				if(evenodd == 1'b0) begin //EVEN
-					Rbuff<=R+mult3;
-					SRAM_write_data<={Gout, Bout};
-					op6<=ubuffereven;
-				end else begin
 					op6<=ubufferodd;
-					Rbuff<=R+mult3;
-					SRAM_write_data<={Rout, Gout};
-				end
+					Rbuff[0]<=R+mult3;
+					SRAM_write_data<={Rout[0], Gout[0]};
 				op5 <= a21;
-				m1state <= cc3;
+				m1state <= li15;
 			end
 			
 			
-			cc3:begin
+			li15:begin
 			B<= B+mult3;
 				vpeven <= {24'd0,vn1};
 				op1 <= jn1;
@@ -459,18 +469,17 @@ always @(posedge Clock or negedge resetn) begin
 				SRAM_we_n <= 1'b1;
 				ubuffereven<=upeven-32'd128;
 				//clippers
-				if(evenodd == 1'b1)begin 
-					Rout<=Rc;
+					Rout[0]<=Rc[0];
 					ybuff[0]<={24'd0,SRAM_read_data[15:8]} - 32'd16;
 					ybuff[1]<={24'd0,SRAM_read_data[7:0]} - 32'd16;
-				end
+
 				
 				upodd <= mult1 + upodd;
 				vpodd <= mult2;
-			m1state <= cc4;
+			m1state <= li16;
 			end
 			
-			cc4:begin
+			li16:begin
 				op1 <= jp1;
 				op2 <= {24'd0,up1};
 				op3 <= jn1;
@@ -478,47 +487,35 @@ always @(posedge Clock or negedge resetn) begin
 				op5 <= a12;
 				upodd <= mult1 + upodd;
 				vpodd <= mult2 + vpodd;	
-				Bbuff<=B;			
-				if(evenodd == 1'b1)begin
+				Bbuff[0]<=B;			
 					SRAM_we_n <= 1'b0;
 					SRAM_address <= RGBaddy + rgbcounter;//146945
 					rgbcounter <= rgbcounter + 32'd1;
 					op6 <= vbufferodd;
-					SRAM_write_data<={Bout,Rout};
-				end else begin
-					op6 <= vbuffereven;
-					SRAM_we_n <= 1'b1;
-				end
+					SRAM_write_data<={Bout[0],Rout[0]};
 				G<=G+mult3;
 				upodd <= mult1 + upodd;
 				vpodd <= mult2 + vpodd;			
-				m1state <= cc5;
+				m1state <= li17;
 			end
 			
 			
-			cc5:begin
+			li17:begin
 				op1 <= jp3;
 				op2 <= {24'd0,up3};
 				op3 <= jp1;
 				op4 <= {24'd0,vp1};
 				op5 <= a00;
-				Gbuff<=G+mult3;
-				if(evenodd == 1'b1)begin
+				Gbuff[0]<=G+mult3;
 					SRAM_we_n <= 1'b1;
 					op6 <= ybuff[0];
-					Bout<=Bc;
-				end else begin
-					op6 <= ybuff[1];
-					SRAM_we_n <= 1'b1;
-					Rout<=Rc;
-					Bout<=Bc;
-				end	
+					Bout[0]<=Bc[0];
 				upodd <= mult1 + upodd;
 				vpodd <= mult2 + vpodd;		
-				m1state <= cc6;
+				m1state <= li18;
 			end
 			
-			cc6:begin
+			li18:begin
 				R <= mult3;
 				G <= mult3;
 				B <= mult3;
@@ -528,23 +525,15 @@ always @(posedge Clock or negedge resetn) begin
 				op4 <= {24'd0,vp3};
 				op5 <= a02;
 				vbuffereven<=vpeven-32'd128;	
-				if(evenodd == 1'b1) begin
 					op6 <= vbuffereven;
-					Gout<=Gc;
-				end else begin
-					SRAM_we_n <= 1'b0;
-					SRAM_address <= RGBaddy + rgbcounter;//146946
-					rgbcounter <= rgbcounter + 18'd1;
-					op6 <= vbufferodd;
-					SRAM_write_data<={Rout,Gc};
-				end
+					Gout[0]<=Gc[0];
 				upodd <= mult1 + upodd;
 				vpodd <= mult2 + vpodd;	
 
-				m1state <= cc7;
+				m1state <= li19;
 			end
 			
-			cc7:begin
+			li19:begin
 				upodd <= ((upodd + mult1 + 32'd128)>>>8) - 32'd128;				
 				vpodd <= mult2 + vpodd;
 				//shift
@@ -558,26 +547,18 @@ always @(posedge Clock or negedge resetn) begin
 				op3 <= jp5;
 				op4 <= {24'd0,vp5};
 				op5 <= a21;
-				if(evenodd == 1'b1) begin
 					SRAM_we_n <= 1'b0;
 					R<= mult3 + R;
 					SRAM_address <= RGBaddy + rgbcounter;//146947
 					rgbcounter <= rgbcounter + 18'd1;
-					SRAM_write_data<={Gout,Bout};
-					op6<=ubuffereven;
-				end else begin
-					SRAM_we_n <= 1'b1;
-					SRAM_address <= yaddy + ycounter;
-					ycounter <= ycounter + 18'd1;
-					Rbuff<= mult3 + R;
-					op6<=ubufferodd;				
-				end	
-				m1state <= cc8;
+					SRAM_write_data<={Gout[0],Bout[0]};
+					op6<=ubuffereven;	
+				m1state <= li20;
 			end
-			cc8:begin
+			li20:begin
 				//ubufferodd <= upodd;
 				vpodd <= ((vpodd + mult2 + 32'd128)>>>8) - 32'd128;
-				Bbuff <= mult3 + B;
+				Bbuff[0] <= mult3 + B;
 				//shift
 				vn5 <= vn3;
 				vn3 <= vn1;
@@ -589,19 +570,13 @@ always @(posedge Clock or negedge resetn) begin
 				op2<= jn5;
 				op5 <= a11;
 				
-				if(evenodd == 1'b1) begin
+
 					SRAM_we_n <= 1'b1;
-					Rbuff<=R;
-					op6<=ubuffereven;
-				end else begin
-					SRAM_we_n <= 1'b0;
-					SRAM_address <= RGBaddy + rgbcounter;
-					rgbcounter <= rgbcounter + 18'd1;
-					SRAM_write_data<={Bout, Rc};
-				end	
-				m1state <= cc9;
+					Rbuff[0]<=R;
+					op6<=ubuffereven;	
+				m1state <= li21;
 			end
-			cc9:begin
+			li21:begin
 				G<= mult3 + G;
 				vp5<=vbuff[7:0];
 				upeven <= {24'd0,un1};
@@ -611,43 +586,32 @@ always @(posedge Clock or negedge resetn) begin
 				op4 <= {24'd0,vn5};
 				op5 <= a12;
 				vbufferodd <= vpodd;
-				if(evenodd == 1'b1) begin
+				
 					op6 <= vbuffereven;
-					Bout<=Bc;
-					Rout<=Rc;
-				end else begin
-					op6 <= vbufferodd;
-					SRAM_we_n <= 1'b1;
-					Bout<=Bc;
-				end	
+					Bout[0]<=Bc[0];
+					Rout[0]<=Rc[0];
+		
 				upodd <= mult1;
 				
-			m1state <= cc10;		
+			m1state <= li22;		
 			end
-			cc10:begin
+			li22:begin
 					op1 <= {24'd0,un1};
 					op2 <= jn1;
 					op3 <= jn3;
 					op4 <= {24'd0,vn3};
 					op5 <= a00;
-					Gbuff <= mult3 + G;
+					Gbuff[0] <= mult3 + G;
 					ubuffereven<=upeven-32'd128;
 					vpeven<={24'd0,vn1};
-				if(evenodd == 1'b1) begin
 					op6<= ybuff[1];
 					SRAM_address <= yaddy + ycounter;
-					ycounter <= ycounter + 18'd1;
-				end else begin
-					op6 <= {24'd0,SRAM_read_data[15:8]}-32'd16;
-					SRAM_we_n <= 1'b1;
-					ybuff[0] <= {24'd0,SRAM_read_data[15:8]}-32'd16;
-					ybuff[1] <= {24'd0,SRAM_read_data[7:0]}-32'd16;
-				end					
+					ycounter <= ycounter + 18'd1;				
 				upodd <= upodd + mult1;
 				vpodd <= mult2;
-			m1state <= cc11;				
+			m1state <= li23;				
 			end
-			cc11:begin
+			li23:begin
 				R <= mult3;
 				G <= mult3;
 				B <= mult3;
@@ -657,23 +621,17 @@ always @(posedge Clock or negedge resetn) begin
 				op4 <= {24'd0,vn1};
 				op5 <= a02;
 				vbuffereven<=vpeven-32'd128;
-				if(evenodd == 1'b1) begin
 					SRAM_we_n <= 1'b0;
 					SRAM_address <= RGBaddy + rgbcounter;
 					rgbcounter <= rgbcounter + 18'd1;
 					op6 <= vbufferodd;
 					//Gout<=Gc;//mb
-					SRAM_write_data<={Rout,Gc};
-				end else begin
-					op6 <= vbuffereven;
-					SRAM_we_n <= 1'b1;
-					Gout<=Gc;
-				end	
+					SRAM_write_data<={Rout[0],Gc[0]};
 			upodd <= upodd + mult1;
 			vpodd <= vpodd + mult2;		
-			m1state <= cc12;				
+			m1state <= li24;				
 			end
-			cc12:begin				
+			li24:begin				
 				upodd <= upodd + mult1;
 				vpodd <= vpodd + mult2;
 				op1 <= {24'd0,up3};
@@ -681,463 +639,812 @@ always @(posedge Clock or negedge resetn) begin
 				op3 <= jp1;
 				op4 <= {24'd0,vp1};
 				op5 <= a21;
-				Rbuff <= R + mult3;
-				if(evenodd == 1'b1) begin	
-					SRAM_we_n <= 1'b1;			
-					SRAM_address <= uaddy + ucounter;
-					ucounter<=ucounter+18'd1;
-					op6<=ubufferodd;
+				Rbuff[0] <= R + mult3;
+				SRAM_we_n <= 1'b1;			
+				op6<=ubufferodd;
 					//Rout<=Rc;
-				end else begin
-					SRAM_we_n <= 1'b0;
-					SRAM_address <= RGBaddy + rgbcounter;
-					rgbcounter <= rgbcounter + 18'd1;
-					SRAM_write_data <= {Gout,Bout};
-					op6<=ubuffereven;
-				end	
-			m1state <= cc13;			
+			m1state <= li25;			
 			end	
-			cc13:begin
+			li25:begin
 				op1 <= {24'd0,up5};
 				op2 <= jp5;
 				op3 <= jp3;
 				op4 <= {24'd0,vp3};
 				op5 <= a11;
-				Bbuff <= B + mult3;
-				if(evenodd == 1'b1) begin
+				Bbuff[0] <= B + mult3;
 					SRAM_we_n <= 1'b0;
 					SRAM_address <= RGBaddy + rgbcounter;
 					rgbcounter <= rgbcounter + 18'd1;
-					SRAM_write_data<={Bout,Rc};
+					SRAM_write_data<={Bout[0],Rc[0]};
 					ybuff[0] <= {24'd0,SRAM_read_data[15:8]}-32'd16;
 					ybuff[1] <= {24'd0,SRAM_read_data[7:0]}-32'd16;
-					op6<=ubufferodd;
-				end else begin
-					SRAM_we_n <= 1'b1;
-					SRAM_address <= uaddy + ucounter;
-					ucounter = ucounter + 18'd1;
-					op6<=ubuffereven;
-				end				
+					op6<=ubufferodd;			
 				upodd <= upodd + mult1;
 				vpodd <= vpodd + mult2;				
-			m1state <= cc14;				
+			m1state <= li26;				
 			end
 			
-			cc14:begin
-			SRAM_we_n <= 1'b1;
-								SRAM_address <= vaddy + vcounter;
-					vcounter = vcounter + 18'd1;
+			li26:begin
+				SRAM_we_n <= 1'b1;
 				G<=G+mult3;
 				op3 <= jp5;
 				op4 <= {24'd0,vp5};
 				op5 <= a12;
-				Bout<=Bc;
-				if(evenodd == 1'b1) begin				
-					op6 <= vbufferodd;
-				end else begin
-					op6 <= vbuffereven;
-				end
+				Bout[0]<=Bc[0];			
+				op6 <= vbufferodd;
 				upodd <= ((upodd + mult1 + 32'd128)>>>8) - 32'd128;
 				vpodd <= vpodd + mult2;
-			m1state <= cc15;				
+			m1state <= li27;				
 			end	
-			cc15:begin				
+			li27:begin			
 				ubufferodd <= upodd;
-
 				vn5 <= vn3;
 				vn3 <= vn1;
 				vn1 <= vp1;
 				vp1 <= vp3;
-				Gbuff <= G + mult3;
+				vp3<=vp5;
+				Gbuff[0] <= G + mult3;
 				op1 <= {24'd0,un3};
 				op2 <= jp5;
 				op5 <= a00;
-				
-				//Gout<=Gc;
-				if(evenodd == 1'b1) begin
-					SRAM_we_n <= 1'b1;
-					op6 <= ybuff[0];
-					SRAM_we_n <= 1'b1;
-					un5 <= un3;
-					un3 <= un1;
-					un1 <= up1;
-					up1<=up3;
-					up3 <= up5;
-					up5<=SRAM_read_data[15:8];
-					ubuff<={24'd0,SRAM_read_data[7:0]};
-					ubufferodd<=upodd;
-				end else begin
-					SRAM_we_n <= 1'b1;
-					op6 <= ybuff[1];
-					SRAM_address <= yaddy + ycounter;
-					ycounter <= ycounter + 18'd1;
-					Rout<=Rc;
-				end
+				SRAM_we_n <= 1'b1;
+				op6 <= ybuff[0];
+				SRAM_we_n <= 1'b1;
+				un5 <= un3;
+				un3 <= un1;
+				un1 <= up1;
+				up1<=up3;
+				up3 <= up5;
+				ubufferodd<=upodd;
 				vpodd <= ((vpodd + mult2 + 32'd128)>>>8) - 32'd128;
-				evenodd<=~evenodd;
+				m1state<=li28;
+				end				
+			li28:begin
+				Gout[0]<=Gc[0];
 				
-				if (ucounter<18'd160) begin
-				m1state<=cc1;
-				end else begin
-				m1end<=1'b1;
-				end
-				end
+				op1<=a00;
+				op2<=ybuff[0];
+				
+				op3<=a02;//red
+				op4<=vbuffereven;
+				
+				op5<=a21;//blue
+				op6<=ubuffereven;
+				m1state<=li29;
+			end
+			li29: begin
+				Rbuff[0]<=mult1+mult2;
+				Bbuff[0]<=mult1+mult3;
+				G<=mult1;
+				op1<=a11;
+				op2<=ubuffereven;
+				
+				op3<=a12;
+				op4<=vbuffereven;
+				
+				SRAM_we_n <= 1'b0;
+				SRAM_address <= RGBaddy + rgbcounter;
+				rgbcounter <= rgbcounter + 18'd1;
+				SRAM_write_data<={Gout[0],Bout[0]};
+				
+				m1state<=li30;
+			end
+			
+			li30: begin
+			SRAM_we_n <= 1'b1;
+			Gbuff[0]<=G+mult1+mult2;
+			Rout[0]<=Rc[0];
+			Bout[0]<=Bc[0];
+			
+			op1<=a00;
+				op2<=ybuff[1];
+				
+				op3<=a02;//red
+				op4<=vbufferodd;
+				
+				op5<=a21;//blue
+				op6<=ubufferodd;
+			
+			m1state<=li31;
+			end
+			
+			li31: begin
+								SRAM_address <= uaddy + ucounter;
+					ucounter <= ucounter + 18'd1;	
+					select<=1'b1;
+			Rbuff[1]<=mult1+mult2;
+			Bbuff[1]<=mult1+mult3;
+			Gout[0]<=Gc[0];
+			G<=mult1;
+			op1<=a11;
+				op2<=ubufferodd;
+				
+				op3<=a12;
+				op4<=vbufferodd;
+			m1state<=li32;
+			end
+			
+			li32: begin
+			SRAM_address <= vaddy + vcounter;
+			vcounter <= vcounter + 18'd1;
+			Rout[1]<=Rc[1];
+			Bout[1]<=Bc[1];
+			Gbuff[1]<=G+mult1+mult2;
+			m1state<=li33;
+			end
+			
+			li33: begin
+			SRAM_address <= yaddy + ycounter;
+			ycounter <= ycounter + 18'd1;	
+			Gout[1]<=Gc[1];
+			select<=1'b0;
+			m1state<=cc1;
+//				if (ucounter<18'd160) begin
+//				m1state<=cc1;
 //				end else begin
-//				m1state<=lo0;
+//				m1end<=1'b1;
 //				end
+			end
+			
+		cc1:begin
+		SRAM_we_n <= 18'b0;
+			SRAM_address <= RGBaddy + rgbcounter;
+			rgbcounter <= rgbcounter + 18'd1;
+			SRAM_write_data <= {Rout[0],Gout[0]};
+			Gout[1]<=Gc[1];
+			op1 <= {24'd0,un5};
+			op2 <= jn5;
+			op3 <= {24'd0,un3};
+			op4 <= jn3;
+			op5 <= {24'd0,un1};
+			op6 <= jn1;
+			
+			up5 <= SRAM_read_data[15:8];
+			ubuff <= SRAM_read_data[7:0];
+			m1state<=cc2;
+			end
+		cc2:begin
+				SRAM_address <= RGBaddy + rgbcounter;//146944
+				rgbcounter <= rgbcounter + 18'd1;
+			SRAM_write_data <= {Bout[0],Rout[1]};
+			upodd<=mult1+mult2+mult3;
+			ubuffereven<={24'd0,un3}-32'd128;
+			vp5 <= SRAM_read_data[15:8];
+			vbuff <= SRAM_read_data[7:0];
+			op1 <= {24'd0,up5};
+			op2 <= jp5;
+			op3 <= {24'd0,up3};
+			op4 <= jp3;
+			op5 <= {24'd0,up1};
+			op6 <= jp1;
+			m1state<=cc3;
+			end
+		cc3:begin
+				SRAM_address <= RGBaddy + rgbcounter;//146944
+				rgbcounter <= rgbcounter + 18'd1;
+			SRAM_write_data <= {Gout[1],Bout[1]};
+			ubufferodd<=((upodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+			ubuffereven<={24'd0,un3}-32'd128;
+			ybuff[0] <= {24'd0,SRAM_read_data[15:8]}-32'd16;
+			ybuff[1] <= {24'd0,SRAM_read_data[7:0]}-32'd16;
+			op1 <= {24'd0,vn5};
+			op2 <= jn5;
+			op3 <= {24'd0,vn3};
+			op4 <= jn3;
+			op5 <= {24'd0,vn1};
+			op6 <= jn1;
+			vbuffereven<={24'd0,vn3}-32'd128;
+		m1state<=cc4;
+			end
+			
+		cc4:begin
+		vpodd<=mult1+mult2+mult3;
+		SRAM_we_n <= 18'b1;
+			op1 <= {24'd0,vp5};
+			op2 <= jp5;
+			op3 <= {24'd0,vp3};
+			op4 <= jp3;
+			op5 <= {24'd0,vp1};
+			op6 <= jp1;
+		m1state<=cc5;	
+				end
+				
+		cc5:begin
+		vbufferodd<=((vpodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+		op1<=a00;
+		op2<=ybuff[0];			
+		op3<=a02;//red
+		op4<=vbuffereven;		
+		op5<=a21;//blue
+		op6<=ubuffereven;
+		
+		m1state<=cc6;
+			end
+			
+		cc6:begin
+		Rbuff[0]<=mult1+mult2;
+		Bbuff[0]<=mult1+mult3;
+		G<=mult1;
+		op1<=a11;
+		op2<=ubuffereven;				
+		op3<=a12;
+		op4<=vbuffereven;
+		m1state<=cc7;
+				end
+				
+		cc7:begin
+		Gbuff[0]<=G+mult1+mult2;
+		Rout[0]<=Rc[0];
+		Bout[0]<=Bc[0];
+		op1<=a00;
+		op2<=ybuff[1];
+		op3<=a02;//red
+		op4<=vbufferodd;
+		op5<=a21;//blue
+		op6<=ubufferodd;
+		m1state<=cc8;
+			end
+			
+		cc8:begin
+			Rbuff[1]<=mult1+mult2;
+			Bbuff[1]<=mult1+mult3;
+			Gout[0]<=Gc[0];
+			G<=mult1;
+			op1<=a11;
+				op2<=ubufferodd;
+				
+				op3<=a12;
+				op4<=vbufferodd;
+		m1state<=cc9;
+			end
+			
+		cc9:begin
+		SRAM_address <= yaddy + ycounter;
+			ycounter <= ycounter + 18'd1;
+			Rout[1]<=Rc[1];
+			Bout[1]<=Bc[1];
+			Gbuff[1]<=G+mult1+mult2;
+			un5 <= un3;
+				un3 <= un1;
+				un1 <= up1;
+				up1<=up3;
+				up3 <= up5;
+				up5<=ubuff;
+		m1state<=cc10;
+			end
+			
+		cc10:begin
+		Gout[1]<=Gc[1];
+		select<=1'b0;
+		SRAM_we_n <= 18'b0;
+			SRAM_address <= RGBaddy + rgbcounter;
+			rgbcounter <= rgbcounter + 18'd1;
+			SRAM_write_data <= {Rout[0],Gout[0]};
+			
+			
+			op1 <= {24'd0,un5};
+			op2 <= jn5;
+			op3 <= {24'd0,un3};
+			op4 <= jn3;
+			op5 <= {24'd0,un1};
+			op6 <= jn1;
+			vn5 <= vn3;
+				vn3 <= vn1;
+				vn1 <= vp1;
+				vp1 <= vp3;
+				vp3<=vp5;
+				vp5<=vbuff;
+		m1state<=cc11;
+			end
+			
+		cc11:begin
+		SRAM_address <= RGBaddy + rgbcounter;//146944
+				rgbcounter <= rgbcounter + 18'd1;
+			SRAM_write_data <= {Bout[0],Rout[1]};
+			upodd<=mult1+mult2+mult3;
+			op1 <= {24'd0,up5};
+			op2 <= jp5;
+			op3 <= {24'd0,up3};
+			op4 <= jp3;
+			op5 <= {24'd0,up1};
+			op6 <= jp1;
+		m1state<=cc12;
+			end
+			
+		cc12:begin
+		SRAM_address <= RGBaddy + rgbcounter;//146944
+				rgbcounter <= rgbcounter + 18'd1;
+			SRAM_write_data <= {Gout[1],Bout[1]};
+			ubufferodd<=((upodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+			ubuffereven<={24'd0,un3}-32'd128;
+			ybuff[0] <= {24'd0,SRAM_read_data[15:8]}-32'd16;
+			ybuff[1] <= {24'd0,SRAM_read_data[7:0]}-32'd16;
+			op1 <= {24'd0,vn5};
+			op2 <= jn5;
+			op3 <= {24'd0,vn3};
+			op4 <= jn3;
+			op5 <= {24'd0,vn1};
+			op6 <= jn1;	
+		vbuffereven<={24'd0,vn3}-32'd128;	
+		m1state<=cc13;
+			end
+			
+		cc13:begin
+			SRAM_we_n <= 18'b1;
+			vpodd<=mult1+mult2+mult3;
+			op1 <= {24'd0,vp5};
+			op2 <= jp5;
+			op3 <= {24'd0,vp3};
+			op4 <= jp3;
+			op5 <= {24'd0,vp1};
+			op6 <= jp1;
+			
+			
+		m1state<=cc14;
+			end
+			
+		cc14:begin
+		op1<=a00;
+		op2<=ybuff[0];			
+		op3<=a02;//red
+		op4<=vbuffereven;		
+		op5<=a21;//blue
+		op6<=ubuffereven;
+		vbufferodd<=((vpodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+		m1state<=cc15;
+			end
+			
+		cc15:begin
+		Rbuff[0]<=mult1+mult2;
+		Bbuff[0]<=mult1+mult3;
+		G<=mult1;
+		op1<=a11;
+		op2<=ubuffereven;				
+		op3<=a12;
+		op4<=vbuffereven;
+		m1state<=cc16;
+			end
+			
+		cc16:begin
+		SRAM_address <= uaddy + ucounter;
+		
+		Gbuff[0]<=G+mult1+mult2;
+		Rout[0]<=Rc[0];
+		Bout[0]<=Bc[0];
+		op1<=a00;
+		op2<=ybuff[1];
+		op3<=a02;//red
+		op4<=vbufferodd;
+		op5<=a21;//blue
+		op6<=ubufferodd;
+		m1state<=cc17;
+			end
+			
+		cc17:begin
+		SRAM_address <= vaddy + vcounter;
+		vcounter <= vcounter + 18'd1;	
+		ucounter <= ucounter + 18'd1;	
+		Rbuff[1]<=mult1+mult2;
+		Bbuff[1]<=mult1+mult3;
+		Gout[0]<=Gc[0];
+		G<=mult1;
+		op1<=a11;
+		op2<=ubufferodd;				
+				op3<=a12;
+				op4<=vbufferodd;
+		m1state<=cc18;
+			end
+			
+		cc18:begin
+		SRAM_address <= yaddy + ycounter;
+			ycounter <= ycounter + 18'd1;
+			Rout[1]<=Rc[1];
+			Bout[1]<=Bc[1];
+			Gbuff[1]<=G+mult1+mult2;
+			un5 <= un3;
+				un3 <= un1;
+				un1 <= up1;
+				up1<=up3;
+				up3 <= up5;
+				
+				vn5 <= vn3;
+				vn3 <= vn1;
+				vn1 <= vp1;
+				vp1 <= vp3;
+				vp3<=vp5;
+		if (ucounter<18'd160) begin
+			m1state<=cc1;
+		end else begin
+		m1end<=1'b1;
+		end
+			end		
+			
+			
+//		lo0:begin
+//			SRAM_we_n <= 18'b0;
+//			SRAM_address <= RGBaddy + rgbcounter;
+//			rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Rout[0],Gout[0]};
+//			Gout[1]<=Gc[1];
+//			
+//			op1 <= {24'd0,un5};
+//			op2 <= jn5;
+//			op3 <= {24'd0,un3};
+//			op4 <= jn3;
+//			op5 <= {24'd0,un1};
+//			op6 <= jn1;
+//			m1state<=lo1;
 //			end
-//	lo0: begin
-//			vbufferodd <= vpodd;
-//			op1 <= un5;
-//			op2 <= jn5;
-//			op5 <= a02;
-//			op6 <= ubufferodd;
-//			upeven <= un1;
-//			R<= mult3;
-//			B<= mult3;
-//			G <= mult3;
-//			
-//			
-//		end
-//	lo1: begin
-//			upodd <=upodd + mult1;
-//			op1 <= un3;
-//			op2 <= jn3;
-//			op3 <= vn5;
-//			op4 <= jn5;
-//			op5 <= a21;
-//			upeven <= un1;
-//			upodd <= mult1;
-//			R<= R + mult3;
-//		end
-//	lo2: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= un1;
-//			op2 <= jn1;
-//			op3 <= vn3;
-//			op4 <= jn3;
-//			op5 <= a11;
-//			vpeven <= vn1;
-//			B <= mult3;
-//		end
-//	lo3: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up1;
-//			op2 <= jp1;
-//			op3 <= vn1;
-//			op4 <= jn1;
-//			op5 <= a12;
-//			op6 <= vbufferodd;
-//			ubufferodd <= upodd;
-//			
-//			G <= mult3;
-//		end
-//	lo4: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up3;
-//			op2 <= jp3;
-//			op3 <= vp1;
-//			op4 <= jp1;
-//			op5 <= a00;
-//			op6 <= ybuff[1];
-//			G <= G + mult3;
-//		end
-//	lo5: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up5;
+//		lo1:begin
+//			SRAM_address <= RGBaddy + rgbcounter;//146944
+//			rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Bout[0],Rout[1]};
+//			upodd<=mult1+mult2+mult3;
+//			ubuffereven<={24'd0,un3}-32'd128;
+//			op1 <= {24'd0,up5};
 //			op2 <= jp5;
-//			op3 <= vp3;
+//			op3 <= {24'd0,up3};
 //			op4 <= jp3;
-//			op5 <= a02;
-//			op6 <= ubuffereven;
-//			R <= R + mult3;
-//			G <= G + mult3;
-//			B <= B + mult3;
-//		end
-//	lo6: begin
-//			upodd <= ((upodd + mult1 + 18'd128)>>>8) - 8'd128;
-//			vpodd <=vpodd + mult2;
-//			un5 <= un3;
-//			un3 <= un1;
-//			un1 <= up1;
-//			up1 <= up3;
-//			up3 <= up5;
-//			op3 <= vp5;
-//			op4 <= jp5;
-//			op5 <= a21;
-//			R <= R + mult3;
-//		end
-//	lo7: begin
-//			vpodd <= ((vpodd + mult2 + 18'd128)>>>8) - 8'd128;
-//			SRAM_address <= yaddy + ycounter;
+//			op5 <= {24'd0,up1};
+//			op6 <= jp1;
+//			m1state<=lo2;
+//			end
+//		lo2:begin
+//				SRAM_address <= RGBaddy + rgbcounter;//146944
+//				rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Gout[1],Bout[1]};
+//			ubufferodd<=((upodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+//			ubuffereven<={24'd0,un3}-32'd128;
+//			ybuff[0] <= {24'd0,SRAM_read_data[15:8]}-32'd16;
+//			ybuff[1] <= {24'd0,SRAM_read_data[7:0]}-32'd16;
+//			op1 <= {24'd0,vn5};
+//			op2 <= jn5;
+//			op3 <= {24'd0,vn3};
+//			op4 <= jn3;
+//			op5 <= {24'd0,vn1};
+//			op6 <= jn1;
+//			vbuffereven<={24'd0,vn3}-32'd128;
+//		m1state<=lo3;
+//			end
+//			
+//		lo3:begin
+//		vpodd<=mult1+mult2+mult3;
+//		SRAM_we_n <= 18'b1;
+//			op1 <= {24'd0,vp5};
+//			op2 <= jp5;
+//			op3 <= {24'd0,vp3};
+//			op4 <= jp3;
+//			op5 <= {24'd0,vp1};
+//			op6 <= jp1;
+//			
+//			
+//			
+//		m1state<=lo4;
+//		
+//				end
+//				
+//		lo4:begin
+//		vbufferodd<=((vpodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+//		op1<=a00;
+//		op2<=ybuff[0];			
+//		op3<=a02;//red
+//		op4<=vbuffereven;		
+//		op5<=a21;//blue
+//		op6<=ubuffereven;
+//		
+//		m1state<=lo5;
+//			end
+//			
+//		lo5:begin
+//		Rbuff[0]<=mult1+mult2;
+//		Bbuff[0]<=mult1+mult3;
+//		G<=mult1;
+//		op1<=a11;
+//		op2<=ubuffereven;				
+//		op3<=a12;
+//		op4<=vbuffereven;
+//		m1state<=lo6;
+//				end
+//				
+//		lo6:begin
+//		Gbuff[0]<=G+mult1+mult2;
+//		Rout[0]<=Rc[0];
+//		Bout[0]<=Bc[0];
+//		op1<=a00;
+//		op2<=ybuff[1];
+//		op3<=a02;//red
+//		op4<=vbufferodd;
+//		op5<=a21;//blue
+//		op6<=ubufferodd;
+//		m1state<=lo7;
+//			end
+//			
+//		lo7:begin
+//			Rbuff[1]<=mult1+mult2;
+//			Bbuff[1]<=mult1+mult3;
+//			Gout[0]<=Gc[0];
+//			G<=mult1;
+//			op1<=a11;
+//				op2<=ubufferodd;
+//				
+//				op3<=a12;
+//				op4<=vbufferodd;
+//		m1state<=lo8;
+//			end
+//			
+//		lo8:begin
+//		SRAM_address <= yaddy + ycounter;
 //			ycounter <= ycounter + 18'd1;
-//			vn5 <= vn3;
-//			vn3 <= vn1;
-//			vn1 <= vp1;
-//			vp1 <= vp3;
-//			vp3 <= vp5;
-//			op1 <= un5;
-//			op2 <= jn5;
-//			
-//			op5 <= a11;
-//			B <= B + mult3;
-//			
-//		end
-//	lo8: begin
-//			upodd <=upodd + mult1;
-//			op1 <= un3;
-//			op2 <= jn3;
-//			op3 <= vn5;
-//			op4 <= jn5;
-//			upeven <= un1;
-//			R<= R + mult3;
-//			G<= G + mult3;
-//			op5 <= a12;
-//			op6<= vbuffereven;
-//		end
-//	lo9: begin
-//			ybuff[0] <= SRAM_read_data[7:0];
-//			ybuff[1] <= SRAM_read_data[17:8];
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= un1;
-//			op2 <= jn1;
-//			op3 <= vn3;
-//			op4 <= jn3;
-//			vpeven <= vn1;
-//			G <= G + mult3;
-//			op5 <= a00;
-//			op6<= SRAM_read_data[7:0];
-//			
-//		end
-//	lo10: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up1;
-//			op2 <= jp1;
-//			op3 <= vn1;
-//			op4 <= jn1;
-//			R <= R + mult3;
-//			G <= G + mult3;
-//			B <= B + mult3;
-//			op5 <= a02;
-//			op6 <= ubufferodd;
-//		end
-//	lo11: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up3;
-//			op2 <= jp3;
-//			op3 <= vp1;
-//			op4 <= jp1;
-//			R <= R + mult3;
-//			op5 <= a21;
-//		end
-//	lo12: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up5;
-//			op2 <= jp5;
-//			op3 <= vp3;
-//			op4 <= jp3;
-//			B <= B + mult3;
-//			op5 <= a11;
-//		end
-//	lo13: begin
-//			upodd <= ((upodd + mult1 + 18'd128)>>>8) - 8'd128;
-//			vpodd <=vpodd + mult2;
+//			Rout[1]<=Rc[1];
+//			Bout[1]<=Bc[1];
+//			Gbuff[1]<=G+mult1+mult2;
 //			un5 <= un3;
 //			un3 <= un1;
 //			un1 <= up1;
-//			up1 <= up3;
+//			up1<=up3;
 //			up3 <= up5;
-//			op3 <= vp5;
-//			op4 <= jp5;
-//			G <= G + mult3;
-//			op5 <= a12;
-//		end
-//	lo14: begin
-//			vpodd <= ((vpodd + mult2 + 18'd128)>>>8) - 8'd128;
-//			G <= G + mult3;
+//
+//		m1state<=lo9;
+//			end
+//			
+//		lo9:begin
+//		Gout[1]<=Gc[1];
+//		select<=1'b0;
+//		SRAM_we_n <= 18'b0;
+//			SRAM_address <= RGBaddy + rgbcounter;
+//			rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Rout[0],Gout[0]};
+//			
+//			
+//			op1 <= {24'd0,un5};
+//			op2 <= jn5;
+//			op3 <= {24'd0,un3};
+//			op4 <= jn3;
+//			op5 <= {24'd0,un1};
+//			op6 <= jn1;
 //			vn5 <= vn3;
 //			vn3 <= vn1;
 //			vn1 <= vp1;
 //			vp1 <= vp3;
-//			vp3 <= vp5;
-//			op1 <= un5;
+//			vp3<=vp5;
+//		m1state<=lo10;
+//			end
+//			
+//		lo10:begin
+//		SRAM_address <= RGBaddy + rgbcounter;//146944
+//				rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Bout[0],Rout[1]};
+//			upodd<=mult1+mult2+mult3;
+//			ubuffereven<={24'd0,un3}-32'd128;
+//			op1 <= {24'd0,up5};
+//			op2 <= jp5;
+//			op3 <= {24'd0,up3};
+//			op4 <= jp3;
+//			op5 <= {24'd0,up1};
+//			op6 <= jp1;
+//		m1state<=lo11;
+//			end
+//			
+//		lo11:begin
+//		SRAM_address <= RGBaddy + rgbcounter;//146944
+//				rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Gout[1],Bout[1]};
+//			ubufferodd<=((upodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+//			ubuffereven<={24'd0,un3}-32'd128;
+//			ybuff[0] <= {24'd0,SRAM_read_data[15:8]}-32'd16;
+//			ybuff[1] <= {24'd0,SRAM_read_data[7:0]}-32'd16;
+//			op1 <= {24'd0,vn5};
 //			op2 <= jn5;
-//			op5 <= a00;
-//			op6 <= ybuff[1];
-//		end
-//	lo15: begin
-//			upodd <=upodd + mult1;
-//			op1 <= un3;
-//			op2 <= jn3;
-//			op3 <= un5;
-//			op4 <= jn5;
-//			R <= R + mult3;
-//			G <= G + mult3;
-//			B <= B + mult3;
-//			op5 <= a02;
-//			op6 <= ubuffereven;
-//		end
-//	lo16: begin
-//			op1 <= un1;
-//			op2 <= jn1;
-//			op3 <= un3;
+//			op3 <= {24'd0,vn3};
 //			op4 <= jn3;
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			R <= R + mult3;
-//			op5 <= a21;
-//		end
-//	lo17: begin
-//			SRAM_address <= yaddy + ycounter;
+//			op5 <= {24'd0,vn1};
+//			op6 <= jn1;	
+//		vbuffereven<={24'd0,vn3}-32'd128;	
+//		m1state<=lo12;
+//			end
+//			
+//		lo12:begin
+//				SRAM_we_n <= 18'b1;
+//			op1 <= {24'd0,vp5};
+//			op2 <= jp5;
+//			op3 <= {24'd0,vp3};
+//			op4 <= jp3;
+//			op5 <= {24'd0,vp1};
+//			op6 <= jp1;
+//			vpodd<=mult1+mult2+mult3;
+//			
+//		m1state<=lo13;
+//			end
+//			
+//		lo13:begin
+//				op1<=a00;
+//		op2<=ybuff[0];			
+//		op3<=a02;//red
+//		op4<=vbuffereven;		
+//		op5<=a21;//blue
+//		op6<=ubuffereven;
+//		vbufferodd<=((vpodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+//		m1state<=lo14;
+//			end
+//			
+//		lo14:begin
+//		Rbuff[0]<=mult1+mult2;
+//		Bbuff[0]<=mult1+mult3;
+//		G<=mult1;
+//		op1<=a11;
+//		op2<=ubuffereven;				
+//		op3<=a12;
+//		op4<=vbuffereven;
+//		m1state<=lo15;
+//			end
+//			
+//		lo15:begin
+//		ucounter <= ucounter + 18'd1;	
+//		Gbuff[0]<=G+mult1+mult2;
+//		Rout[0]<=Rc[0];
+//		Bout[0]<=Bc[0];
+//		op1<=a00;
+//		op2<=ybuff[1];
+//		op3<=a02;//red
+//		op4<=vbufferodd;
+//		op5<=a21;//blue
+//		op6<=ubufferodd;
+//		m1state<=lo16;
+//			end
+//			
+//		lo16:begin
+//			vcounter <= vcounter + 18'd1;	
+//			select<=1'b1;
+//			Rbuff[1]<=mult1+mult2;
+//			Bbuff[1]<=mult1+mult3;
+//			Gout[0]<=Gc[0];
+//			G<=mult1;
+//			op1<=a11;
+//				op2<=ubufferodd;
+//				op3<=a12;
+//				op4<=vbufferodd;
+//		m1state<=lo17;
+//			end
+//			
+//		lo17:begin
+//		SRAM_address <= yaddy + ycounter;
 //			ycounter <= ycounter + 18'd1;
-//			op1 <= up1;
-//			op2 <= jp1;
-//			op3 <= un1;
-//			op4 <= jn1;
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			B <= B + mult3;
-//			op5 <= a11;
-//		end
-//	lo18: begin
-//			op1 <= up3;
-//			op2 <= jp3;
-//			op3 <= up1;
-//			op4 <= jp1;
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			G <= G + mult3;
-//			op5 <= a12;
-//		end
-//	lo19: begin
-//			ybuff[0] <= SRAM_read_data[7:0];
-//			ybuff[1] <= SRAM_read_data[17:8];
-//			op1 <= up5;
-//			op2 <= jp5;
-//			op3 <= up3;
-//			op4 <= jp3;
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			G <= G + mult3;
-//			op5 <= a00;
-//			op6 <= SRAM_read_data[7:0];
-//		end
-//	lo20: begin
-//			upodd <= ((upodd + mult1 + 18'd128)>>>8) - 8'd128;
-//			vpodd <= vpodd + mult2;
+//			Rout[1]<=Rc[1];
+//			Bout[1]<=Bc[1];
+//			Gbuff[1]<=G+mult1+mult2;
 //			un5 <= un3;
 //			un3 <= un1;
 //			un1 <= up1;
 //			up1 <= up3;
 //			up3 <= up5;
-//			op3 <= up5;
-//			op4 <= jp5;
-//			R <= R + mult3;
-//			G <= G + mult3;
-//			B <= B + mult3;
-//			op5 <= a02;
-//			op6 <= ubufferodd;
-//		end
-//	lo21: begin
-//			vpodd <= ((vpodd + mult2 + 18'd128)>>>8) - 8'd128;
-//			R <= R + mult3;
-//			vn5 <= vn3;
-//			vn3 <= vn1;
-//			vn1 <= vp1;
-//			vp1 <= vp3;
-//			vp3 <= vp5;
-//			op1 <= un5;
+//			end
+//			
+//		lo18:begin
+//			SRAM_we_n <= 18'b0;
+//			SRAM_address <= RGBaddy + rgbcounter;
+//			rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Rout[0],Gout[0]};
+//			Gout[1]<=Gc[1];
+//			
+//			op1 <= {24'd0,un5};
 //			op2 <= jn5;
-//			op5 <= a21;
-//		end
-//	lo22: begin
-//			op1 <= un3;
-//			op2 <= jn3;
-//			op3 <= un5;
-//			op4 <= jn5;
-//			upodd <=upodd + mult1;
-//			B <= B + mult3;
-//			op5 <= a11;
-//		end
-//	lo23: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= un1;
-//			op2 <= jn1;
-//			op3 <= un3;
+//			op3 <= {24'd0,un3};
 //			op4 <= jn3;
-//			G <= G + mult3;
-//			op5 <= a12;
-//		end
-//	lo24: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up1;
-//			op2 <= jp1;
-//			op3 <= un1;
-//			op4 <= jn1;
-//			G <= G + mult3;
-//			op5 <= a00;
-//			op6 <= ybuff[1];
-//		end
-//	lo25: begin
-//			upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up3;
-//			op2 <= jp3;
-//			op3 <= up1;
-//			op4 <= jp1;
-//			R <= R + mult3;
-//			G <= G + mult3;
-//			B <= B + mult3;
-//			op5 <= a02;
-//			op6 <= ubuffereven;
-//		end
-//	lo26: begin
-//				upodd <=upodd + mult1;
-//			vpodd <=vpodd + mult2;
-//			op1 <= up5;
+//			op5 <= {24'd0,un1};
+//			op6 <= jn1;
+//			m1state<=lo19;
+//			end
+//		lo19:begin
+//			SRAM_address <= RGBaddy + rgbcounter;//146944
+//			rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Bout[0],Rout[1]};
+//			upodd<=mult1+mult2+mult3;
+//			ubuffereven<={24'd0,un3}-32'd128;
+//			op1 <= {24'd0,up5};
 //			op2 <= jp5;
-//			op3 <= up3;
+//			op3 <= {24'd0,up3};
 //			op4 <= jp3;
-//			R <= R + mult3;
-//			op5 <= a21;
-//		end
-//	lo27: begin
-//			upodd <= ((upodd + mult1 + 18'd128)>>>8) - 8'd128;
-//			vpodd <=vpodd + mult2;
+//			op5 <= {24'd0,up1};
+//			op6 <= jp1;
+//			m1state<=lo20;
+//			end
+//		lo20:begin
+//				SRAM_address <= RGBaddy + rgbcounter;//146944
+//				rgbcounter <= rgbcounter + 18'd1;
+//			SRAM_write_data <= {Gout[1],Bout[1]};
+//			ubufferodd<=((upodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+//			ubuffereven<={24'd0,un3}-32'd128;
+//			ybuff[0] <= {24'd0,SRAM_read_data[15:8]}-32'd16;
+//			ybuff[1] <= {24'd0,SRAM_read_data[7:0]}-32'd16;
+//			op1 <= {24'd0,vn5};
+//			op2 <= jn5;
+//			op3 <= {24'd0,vn3};
+//			op4 <= jn3;
+//			op5 <= {24'd0,vn1};
+//			op6 <= jn1;
+//			vbuffereven<={24'd0,vn3}-32'd128;
+//		m1state<=lo21;
+//			end
+//			
+//		lo21:begin
+//		vpodd<=mult1+mult2+mult3;
+//		SRAM_we_n <= 18'b1;
+//			op1 <= {24'd0,vp5};
+//			op2 <= jp5;
+//			op3 <= {24'd0,vp3};
+//			op4 <= jp3;
+//			op5 <= {24'd0,vp1};
+//			op6 <= jp1;
+//			
+//			
+//			
+//		m1state<=lo22;
+//		
+//				end
+//				
+//		lo22:begin
+//		vbufferodd<=((vpodd+mult1+mult2+mult3+ 32'd128)>>>8)-32'd128;
+//		op1<=a00;
+//		op2<=ybuff[0];			
+//		op3<=a02;//red
+//		op4<=vbuffereven;		
+//		op5<=a21;//blue
+//		op6<=ubuffereven;
+//		
+//		m1state<=lo23;
+//			end
+//			
+//		lo23:begin
+//		Rbuff[0]<=mult1+mult2;
+//		Bbuff[0]<=mult1+mult3;
+//		G<=mult1;
+//		op1<=a11;
+//		op2<=ubuffereven;				
+//		op3<=a12;
+//		op4<=vbuffereven;
+//		m1state<=lo24;
+//				end
+//				
+//		lo24:begin
+//		Gbuff[0]<=G+mult1+mult2;
+//		Rout[0]<=Rc[0];
+//		Bout[0]<=Bc[0];
+//		op1<=a00;
+//		op2<=ybuff[1];
+//		op3<=a02;//red
+//		op4<=vbufferodd;
+//		op5<=a21;//blue
+//		op6<=ubufferodd;
+//		m1state<=lo25;
+//			end
+//			
+//		lo25:begin
+//			Rbuff[1]<=mult1+mult2;
+//			Bbuff[1]<=mult1+mult3;
+//			Gout[0]<=Gc[0];
+//			G<=mult1;
+//			op1<=a11;
+//				op2<=ubufferodd;
+//				
+//				op3<=a12;
+//				op4<=vbufferodd;
+//		m1state<=lo26;
+//			end
+//			
+//		lo26:begin
+//		SRAM_address <= yaddy + ycounter;
+//			ycounter <= ycounter + 18'd1;
+//			Rout[1]<=Rc[1];
+//			Bout[1]<=Bc[1];
+//			Gbuff[1]<=G+mult1+mult2;
 //			un5 <= un3;
 //			un3 <= un1;
 //			un1 <= up1;
-//			up1 <= up3;
+//			up1<=up3;
 //			up3 <= up5;
-//			op3 <= up5;
-//			op4 <= jp5;
-//			B <= B + mult3;
-//			op5 <= a11;
-//		end
-//	lo28: begin
-//			vpodd <= ((vpodd + mult2 + 18'd128)>>>8) - 8'd128;
-//			vn5 <= vn3;
-//			vn3 <= vn1;
-//			vn1 <= vp1;
-//			vp1 <= vp3;
-//			vp3 <= vp5;
-//			G <= G + mult3;
-//			op5 <= a12;
-//		end
-//	lo29: begin
-//			G <= G + mult3;
-//			m1end<=1'd1;
-//		end	
+//			m1end <= 1'b1;
+//		
+//			end
 		endcase
 end
 end

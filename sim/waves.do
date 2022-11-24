@@ -33,23 +33,22 @@ add wave -hex UUT/VGA_unit/VGA_blue
 
 add wave -divider -height 10 {OUR STUFF}
 add wave -hex UUT/milestone1/m1state
-add wave -hex UUT/milestone1/evenodd
 add wave -hex UUT/milestone1/ucounter
 add wave -hex UUT/milestone1/ycounter
 add wave -hex UUT/milestone1/vcounter
 add wave -hex UUT/milestone1/ybuff
 
-#add wave -hex UUT/milestone1/un5
-#add wave -hex UUT/milestone1/un3
+add wave -hex UUT/milestone1/un5
+add wave -hex UUT/milestone1/un3
 add wave -hex UUT/milestone1/un1
-#add wave -hex UUT/milestone1/up1
-#add wave -hex UUT/milestone1/up3
+add wave -hex UUT/milestone1/up1
+add wave -hex UUT/milestone1/up3
 add wave -hex UUT/milestone1/up5
-#add wave -hex UUT/milestone1/vn5
-#add wave -hex UUT/milestone1/vn3
+add wave -hex UUT/milestone1/vn5
+add wave -hex UUT/milestone1/vn3
 add wave -hex UUT/milestone1/vn1
-#add wave -hex UUT/milestone1/vp1
-#add wave -hex UUT/milestone1/vp3
+add wave -hex UUT/milestone1/vp1
+add wave -hex UUT/milestone1/vp3
 add wave -hex UUT/milestone1/vp5
 add wave -hex UUT/milestone1/ubufferodd
 add wave -hex UUT/milestone1/ubuffereven
