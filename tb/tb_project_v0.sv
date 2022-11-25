@@ -26,7 +26,7 @@ add your own.
 `include "../rtl/VGA_param.h"
 
 `define FEOF 32'hFFFFFFFF
-`define MAX_MISMATCHES 30
+`define MAX_MISMATCHES 6
 
 // file for output
 // this is only useful if decoding is done all the way through

@@ -60,6 +60,7 @@ add wave -hex UUT/milestone1/vpodd
 add wave -hex UUT/milestone1/vpeven
 add wave -hex UUT/milestone1/vbuff
 add wave -hex UUT/milestone1/ubuff
+add wave -hex UUT/milestone1/pixCount
 
 add wave -divider -height 10 {RGB GOON SQUAD}
 add wave -hex UUT/milestone1/rgbcounter
@@ -86,5 +87,4 @@ add wave -hex UUT/milestone1/op4
 add wave -hex UUT/milestone1/op5
 add wave -hex UUT/milestone1/op6
 
-add wave -hex UUT/milestone1/a11
-add wave -hex UUT/milestone1/a12
+add wave -hex UUT/milestone1/colcounter
